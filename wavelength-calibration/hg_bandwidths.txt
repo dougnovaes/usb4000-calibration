@@ -1,0 +1,19 @@
+# Peak metrics read from Ocean Optics SpectraSuite (Show Peak Info panel)
+# Mercury lamp, integration time 300 ms
+#
+# Column 1: detector pixel index reported by SpectraSuite
+# Column 2: "90% Bandwidth" [nm]. NaN marks peaks whose reported value
+#           fluctuated by up to an order of magnitude between readings and
+#           is therefore unusable as an uncertainty estimate.
+#
+# See README, section "Why the bandwidth is read rather than recomputed".
+#
+# pixel   bandwidth_nm
+    361   0.85
+    640   0.84
+    889   0.83
+   1080   0.41
+   1232   0.41
+   1780   0.40
+   1937   3.13
+   1948   3.13

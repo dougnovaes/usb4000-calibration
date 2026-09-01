@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+title: "USB4000 Calibration: Wavelength-Axis and Absolute Radiometric Calibration Pipelines"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - given-names: "Douglas O."
+    family-names: "Novaes"
+    orcid: "https://orcid.org/0000-0002-9504-9872"
+    affiliation: "Institute of Physics, University of Sao Paulo (IFUSP)"
+abstract: >-
+  Two calibration pipelines for the same Ocean Optics USB4000
+  spectrometer: a wavelength-axis calibration from Hg/Ne emission
+  lines, whose stated end application is the spectral characterization
+  of a cold dielectric-barrier-discharge (DBD) plasma, and an absolute
+  radiometric calibration of the same instrument against a
+  NIST-traceable FEL standard lamp.
+keywords:
+  - spectrometer calibration
+  - wavelength calibration
+  - radiometric calibration
+  - plasma spectroscopy
+  - dielectric barrier discharge
+license: MIT
+version: "1.0.0"

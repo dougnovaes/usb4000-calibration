@@ -1,0 +1,26 @@
+# Post-write validation acquisition, Hg lamp, integration time 300 ms
+# Third acquisition -- optics room air-conditioned, longer settling time
+# before acquiring than the previous (AC, unstated settling time) round.
+# Columns: pixel, wavelength_nm (as displayed by the instrument under the
+# NEWLY WRITTEN calibration), bandwidth90_nm, center_wavelength_nm
+#
+# pixel  wavelength_nm  bandwidth90_nm  center_wavelength_nm
+    361      253.85          0.85            253.79
+    562      296.73          1.69            296.85
+    640      312.98          0.84            313.05
+    889      365.13          0.42            365.14
+   1080      404.70          0.41            404.69
+   1232      435.90          0.41            435.87
+   1780      545.85          0.39            545.89
+   1937      576.97          2.93            576.98
+   1948      579.12          2.73            579.06
+
+
+
+
+
+
+
+
+
+

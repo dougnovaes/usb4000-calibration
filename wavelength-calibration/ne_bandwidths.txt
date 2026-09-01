@@ -1,0 +1,38 @@
+# Peak metrics read from Ocean Optics SpectraSuite (Show Peak Info panel)
+# Neon lamp, integration time 300 ms
+#
+# Column 1: detector pixel index reported by SpectraSuite
+# Column 2: "90% Bandwidth" [nm]. NaN marks peaks whose reported value
+#           fluctuated by up to an order of magnitude between readings and
+#           is therefore unusable as an uncertainty estimate.
+#
+# Note: pixels 2714 and 2715 are the two central pixels of a single peak
+# (Ne I 724.5167 nm). The matching routine keeps only one of them.
+#
+# pixel   bandwidth_nm
+   1979   1.17
+   1994   5.65
+   2027   0.78
+   2043   NaN
+   2070   NaN
+   2094   8.69
+   2105   1.93
+   2129   1.16
+   2140   9.83
+   2168   0.38
+   2193   0.38
+   2213  19.92
+   2229   0.38
+   2254   3.05
+   2264   1.53
+   2319   1.14
+   2333   4.93
+   2368   0.38
+   2410   0.38
+   2430   5.65
+   2544   0.37
+   2599   0.37
+   2676   0.74
+   2714   0.37
+   2715   0.37
+   2820   0.73

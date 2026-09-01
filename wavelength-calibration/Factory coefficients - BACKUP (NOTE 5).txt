@@ -1,0 +1,2 @@
+% Factory coefficients — BACKUP (NOTE 5), ascending order [a0 a1 a2 a3]
+FACTORY_COEF = [178.085770, 2.1517764E-1, -3.3423826E-6, -5.9958050E-10];

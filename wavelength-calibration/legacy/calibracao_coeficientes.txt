@@ -1,0 +1,14 @@
+# Calibração de comprimento de onda — USB4000 — 2026-08-26
+# Ajuste: polinômio grau 3, 27 pontos (6 Hg + 21 Ne)
+# RMS interno 0.0232 nm | LOOCV 0.0396 nm | fábrica 1.0267 nm
+# Posição dos picos: parábola nos 3 pontos centrais (sub-pixel)
+# Referências: NIST ASD ver. 5.12 (DOI 10.18434/T4W30F)
+Intercept	177.3815099880
+1st	2.1413345471E-01
+2nd	-2.5624905862E-06
+3rd	-7.6664807747E-10
+# COEFICIENTES DE FÁBRICA (backup):
+# Intercept	178.085770
+# 1st	2.1517764E-01
+# 2nd	-3.3423826E-06
+# 3rd	-5.9958050E-10
