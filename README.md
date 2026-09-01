@@ -1,8 +1,10 @@
 # usb4000-calibration
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22236758.svg)](https://doi.org/10.5281/zenodo.22236758)
+
 Two independent calibration pipelines for the same instrument: an Ocean
 Optics USB4000 spectrometer, at the Institute of Physics, University of
-Sao Paulo. `wavelength-calibration/` states its end application
+São Paulo. `wavelength-calibration/` states its end application
 directly in its own header: spectral characterization of a cold
 dielectric-barrier-discharge (DBD) plasma. `fel-lamp-calibration/`
 calibrates the same instrument's absolute radiometric response and
@@ -32,3 +34,15 @@ MIT — see [LICENSE](LICENSE).
 ## Citation
 
 See [CITATION.cff](CITATION.cff).
+
+## Contributions
+
+José Helder F. Severo (University of São Paulo), the author's
+postdoctoral supervisor, proposed the calibration work documented in
+this repository and provided the equipment used throughout — the
+Ocean Optics USB4000 spectrometer, the Hg and Ne calibration lamps,
+and the Eppley FEL standard lamp with its calibration certificate —
+and supervised the initial operation of the lamps' high-voltage power
+supplies.
+He is listed as a co-author in CITATION.cff for these contributions,
+not for authorship of the code.
