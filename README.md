@@ -43,6 +43,10 @@ this repository and provided the equipment used throughout — the
 Ocean Optics USB4000 spectrometer, the Hg and Ne calibration lamps,
 and the Eppley FEL standard lamp with its calibration certificate —
 and supervised the initial operation of the lamps' high-voltage power
-supplies.
-He is listed as a co-author in CITATION.cff for these contributions,
-not for authorship of the code.
+supplies. He is listed as a co-author in CITATION.cff for these
+contributions, not for authorship of the code.
+
+Leonardo G. Sgubin (University of São Paulo) introduced the
+SpectraSuite software and collaborated on the initial data
+collections. He is listed as a co-author in CITATION.cff for these
+contributions, not for authorship of the code.

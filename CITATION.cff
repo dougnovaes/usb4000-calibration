@@ -16,6 +16,10 @@ authors:
     family-names: "Severo"
     orcid: "https://orcid.org/0000-0001-6271-666X"
     affiliation: "University of São Paulo"
+  - given-names: "Leonardo G."
+    family-names: "Sgubin"
+    orcid: "https://orcid.org/0000-0001-6910-4869"
+    affiliation: "University of São Paulo"
 abstract: >-
   Two calibration pipelines for the same Ocean Optics USB4000
   spectrometer: a wavelength-axis calibration from Hg/Ne emission
