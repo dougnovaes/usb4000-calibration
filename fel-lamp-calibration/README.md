@@ -66,6 +66,18 @@ ABSOLUTE_CALIBRATION
 No external input files are required — the certificate and the
 tungsten emissivity table are hardcoded in the script (Section 2).
 
+```matlab
+ABSOLUTE_IRRADIANCE_VALIDATION
+```
+
+Unlike `ABSOLUTE_CALIBRATION`, this script requires two external inputs
+you supply yourself (Section 1 of the script): a SpectraSuite
+`.IrradCal` calibration file, and a raw High-Speed-Acquisition counts
+export from the same instrument. A worked example of both is provided
+in `example_data/` (see below) -- edit `CAL_FILE`, `COUNTS_FILE`, and
+`T_INT_US` in the script to point at them, or at your own acquisition,
+before running.
+
 ## Outputs
 
 | File | Description |
@@ -75,6 +87,34 @@ tungsten emissivity table are hardcoded in the script (Section 2).
 | `model_comparison_color.png` / `.pdf` | Publication figure, six models and residuals |
 | `model_comparison_bw.png` | Same figure, true grayscale (pixel-level RGB-to-luminance conversion) |
 | `six_models_comparison*.png` | Comparison figures saved during development |
+| `irradiance_results.csv` | Per-pixel table: wavelength, mean irradiance, both confidence bands, and saturation/out-of-range/negative-signal flags (`ABSOLUTE_IRRADIANCE_VALIDATION`) |
+| `certificate_comparison.csv` | Ratio of measured to certificate irradiance at the standard reference wavelengths (`ABSOLUTE_IRRADIANCE_VALIDATION`) |
+
+## Known instrument/software behavior
+
+SpectraSuite's Absolute Irradiance Setup Wizard offers a Distance
+Correction option (Advanced dialog, Reference Distance / Corrected
+Distance) intended for building a calibration when the lamp is
+necessarily measured at a distance other than the certificate's
+reference distance (50 cm, for the Eppley EN-66 used here). Verified
+against three independent working distances (50, 57, and 60 cm; diffuse
+reflection from a nearby wall and fiber alignment were checked and
+ruled out separately as contributing causes), the resulting calibration
+does not incorporate this correction: the measured-to-certificate ratio
+at each distance matches (50/d)^2 to within 1-2%, i.e. exactly what
+plain, uncorrected inverse-square attenuation predicts -- regardless of
+whether the correction was supplied as a pre-scaled lamp file or via
+the dialog's own Reference/Corrected Distance fields.
+
+Until this is understood at the software level, do not rely on
+SpectraSuite's Distance Correction for a calibration built away from
+the certificate distance. Apply it externally instead: multiply the
+irradiance `ABSOLUTE_IRRADIANCE_VALIDATION.m` reports by (d/50)^2,
+where d is the actual working distance in cm. The script does not do
+this automatically -- it reports the certificate-ratio spectrum
+specifically so this (50/d)^2 signature is visible on inspection,
+rather than silently correcting for a cause that is not yet understood
+at the root.
 
 ## Legacy
 
