@@ -3,12 +3,48 @@
 %  file generation
 %
 %  (Renamed from Calibration07 to avoid confusion with the wavelength-
-%  axis calibration work, which lives in WAVELENGTH_CALIBRATION_Calibrated.m
+%  axis calibration work, which lives in wavelength-calibration/WAVELENGTH_CALIBRATION.m
 %  and is an unrelated calibration of the same instrument.)
 %
 % =========================================================================
 % WHAT CHANGED IN THIS VERSION
 % =========================================================================
+%   RELEASE v1.2.2 (2026-11-01)
+%  18. Model 1 is labelled "Gray body" (Planck function times a free
+%      amplitude, i.e. a constant emissivity), as in the manuscript, in the
+%      console table, the CSV and the figure legend; Models 2-3 likewise.
+%      REFERENCE RESULTS updated with this script's own LOOCV figures.
+%      No numerical change.
+%
+%   REVISION OF 2026-10-30 (coauthor review) -- items 12-17 DO change the
+%   reported numbers; items 1-11 below are the earlier hardening pass.
+%
+%  12. LOOCV of Model 5 now re-estimates ALL SEVEN parameters in every
+%      fold (loocv_model5_full), starting from the pinned reference vector.
+%      The previous loocv_model5 held h4 and h6 fixed and -- through the
+%      call in Section 8 -- fixed them at the STAGE-1 values h4_1/h6_1
+%      (about 2.08/1.20), not at the adopted model's (7.07/1.89). The
+%      1.40 % reported until now was therefore the LOOCV of a different
+%      parameterisation. Kept as loocv_model5_legacy, printed for
+%      comparison only.
+%  13. LOOCV of Model 6 now re-optimises the kernel hyperparameters in
+%      every fold, with the same multi-start procedure used on the full
+%      data (fit_gpr_multistart). Holding them at their full-data values
+%      lets the held-out point influence its own prediction. The old
+%      fixed-hyperparameter version is kept as loocv_gpr_legacy.
+%  14. The Model 5 row of the metrics table, its LOOCV and the figure now
+%      use the PINNED reference vector REF5 -- the one that generates the
+%      lamp file -- instead of the fresh, unpinned Stage-2 solve. The
+%      fresh solve still runs and is printed as a diagnostic of the h3
+%      instability.
+%  15. GPR in-sample RMS now uses the same (n-k) normalisation as Models
+%      1-5 (add_result_direct), as in the manuscript (0.63 %).
+%  16. Metrics printout and CSV gain a dAICc column (AICc minus that of
+%      Model 5). The manuscript designates AICc as the preferred
+%      criterion, so the differences it quotes must be AICc differences.
+%  17. Standard errors are reported for both the fresh solve and REF5;
+%      the manuscript quotes the REF5 values (A 6 %, T 1 %).
+%
 %   All changes below are robustness/correctness hardening found by a
 %   line-by-line review; none of them is expected to change the selected
 %   model (5, log-linear Huang) or the overall conclusions, and the
@@ -120,9 +156,9 @@
 % =========================================================================
 % THE SIX MODELS
 % =========================================================================
-%   1. Black body                          F = A * B(lambda,T)
-%   2. Black body x linear emissivity      F = A*(1-alpha*lambda_um)*B
-%   3. Black body x tabulated emissivity   F = A*eps(lambda,T)*B
+%   1. Gray body                           F = A * B(lambda,T)
+%   2. Gray body x linear emissivity       F = A*(1-alpha*lambda_um)*B
+%   3. Gray body x tabulated emissivity    F = A*eps(lambda,T)*B
 %   4. Model 3 x linear residual           F = A*eps(lambda,T)*(1-beta*lambda_um)*B
 %   5. Two-stage log-linear (Huang 1998)   see below
 %   6. Gaussian process regression         non-parametric, log-linear space
@@ -161,13 +197,14 @@
 %   land on h3 pinned at its own bound, with h2, h4 correspondingly
 %   different from another run's values, at an equally good weighted RMS.
 %   This matches the standard errors already on record for this model:
-%   h2, h3, h5, h6 are all "poorly determined" (64-327% relative SE),
+%   h2, h3, h5, h6 are all "poorly determined" (64-328% relative SE),
 %   while A and T -- the physically interpretable parameters -- are not
 %   (6% and 1%). PRACTICAL CONSEQUENCE: this script's lamp file (Section
 %   11) is generated from the pinned REFERENCE parameters, not from
 %   whatever a fresh Stage 2 happens to converge to on a given run --
 %   the predicted CURVE is far better constrained than any individual
-%   h-parameter.
+%   h-parameter. REF5's h3 = 80 is the upper bound of the run that
+%   produced it (legacy/Calibration06.m); the bound is now 200.
 %
 % =========================================================================
 % WHY LOOCV, NOT JUST RMS, DECIDES THE WINNER
@@ -176,30 +213,37 @@
 %   the demonstration: its in-sample RMS is the second-best of six, which
 %   is why it was, for a time, the leading candidate -- until LOOCV
 %   exposed near-interpolation (a very low fitted noise level) that
-%   generalises poorly (RMS 0.6% -> LOOCV 3.5%, ~6x worse). Model 5's
-%   LOOCV barely moves relative to its in-sample value despite having the
-%   most nominal parameters of any candidate.
+%   generalises poorly (see REFERENCE RESULTS for the current figures).
+%   Model 5's LOOCV stays within a factor of about two of its in-sample
+%   value despite having the most nominal parameters of any candidate.
 %
-%   Model 5's curvature exponents (h4,h6) and Model 6's kernel
-%   hyperparameters are held fixed at their full-data values during
-%   LOOCV, refitting only the better-posed remaining parameters each
-%   fold -- a documented, conservative simplification that can only add
-%   variability to these two models, never hide an overfitting problem.
+%   Since revision items 12-13, every parameter of every model --
+%   including Model 5's seven parameters and Model 6's kernel
+%   hyperparameters -- is re-estimated in every LOOCV fold, so the
+%   held-out point never influences its own prediction.
 %
 % =========================================================================
 % REFERENCE RESULTS (for verification)
 % =========================================================================
 %   Model                    k   RMS(%)  LOOCV(%)     AIC     AICc   T(K)
-%   1  Black body             2    6.40     6.77   -168.53  -168.10  3069
+%   1  Gray body              2    6.40     6.77   -168.53  -168.10  3069
 %   2  Linear emissivity      3    2.74     3.05   -220.19  -219.30  3022
 %   3  Tabulated real         2    4.34     4.47   -192.56  -192.13  2991
 %   4  Hybrid                 3    2.07     2.29   -237.68  -236.79  3024
-%   5  Log-linear (Huang)     7  0.54-0.57  0.78-1.40  ~-315   ~-311  3023
-%   6  GPR                    3  0.59-0.63    3.51    ~-312   ~-311  3069*
+%   5  Log-linear (Huang)     7    0.57     1.01   -314.39  -309.52  3023
+%   6  GPR                    3    0.63     3.51   -311.72  -310.83  3069*
+%
+%   Recorded from this script's own run (MATLAB, 2026-10-31). Row 5 is
+%     the pinned REF5 vector (item 14). The previous table (0.54 / 1.40 /
+%     -317.77 / -312.90) mixed a fresh Stage-2 solve with a LOOCV run at
+%     the Stage-1 exponents.
+%
 %   (Model 5's exact RMS/LOOCV vary run to run per the h3 instability
-%   above; Model 6's "T" is a post-hoc black-body fit to its own smoothed
-%   prediction, not a hyperparameter. Model 6's AIC/AICc use k=3 but are
-%   not directly comparable to the parametric models -- see item 7 above.)
+%   above -- this table records one specific, reproducible run, adopted
+%   as the reference for the paper and for the lamp file below; Model 6's
+%   "T" is a post-hoc black-body fit to its own smoothed prediction, not
+%   a hyperparameter. Model 6's AIC/AICc use k=3 but are not directly
+%   comparable to the parametric models -- see item 7 above.)
 %
 %   F-test, Model 1 vs 2 (nested, alpha=0): F=130.08, p=4.9e-12
 %   F-test, Model 3 vs 4 (nested, beta=0):  F=100.02, p=9.6e-11
@@ -318,7 +362,7 @@ results = struct([]);
 
 r1 = @(p) (p(1).*planck(wl_um,p(2)) - F)./F;
 p1 = lsqnonlin(r1, [50, 3000], [0,1000], [1e6,6000], fitopts);
-results = add_result(results, 'Black body', 2, p1, r1, @(lam,p) p(1).*planck(lam/1000,p(2)), n);
+results = add_result(results, 'Gray body', 2, p1, r1, @(lam,p) p(1).*planck(lam/1000,p(2)), n);
 
 r2 = @(p) (p(1).*(1-p(3).*wl_um).*planck(wl_um,p(2)) - F)./F;
 p2 = lsqnonlin(r2, [50, 3000, 0.1], [0,1000,-2], [1e6,6000,2], fitopts);
@@ -350,6 +394,13 @@ f_test(results(3), results(4), n, 'Model 3 vs 4 (beta=0)');
 %% ========================================================================
 %  6. MODEL 5 — TWO-STAGE LOG-LINEAR FIT (Huang et al. 1998)
 %  ========================================================================
+% Stage 1 is the linearised fit of Huang et al. (1998), their Eqs. (4)-(5):
+% L = ln(lambda^5 F) = c0 + c1/lambda + c2*lambda -/+ c|d|^(h4 or h6), with
+% the Wien-type black-body factor exp(c0 + c1/lambda) and, here, a single
+% curvature amplitude shared by both sides (used only as a starting point).
+% Stage 2 is this work's modification: the complete Planck function with
+% an explicit colour temperature, separate curvature amplitudes h3 and h5,
+% and all seven parameters refined jointly on relative residuals.
 L = log(wl.^5 .* F);
 d = (wl - LAMBDA0)/500;  below = wl < LAMBDA0;
 design5 = @(h4,h6) [ones(n,1), 1./wl, wl, below.*(-abs(d).^h4) + (~below).*(abs(d).^h6)];
@@ -371,25 +422,23 @@ lb5  = [0,    1000, -5,   0, 0.1, -5, 0.1];
 ub5  = [1e6,  6000,  5, 200,  15,  5,  15];
 r5 = @(p) (model5fun(wl,p(1),p(2),p(3),p(4),p(5),p(6),p(7)) - F)./F;
 p5 = lsqnonlin(r5, p0_5, lb5, ub5, fitopts);
-results = add_result(results, 'Log-linear (Huang)', 7, p5, r5, ...
+% Item 14: the table, the LOOCV and the figure use the pinned vector REF5.
+p5ref = [REF5.A, REF5.T, REF5.h2, REF5.h3, REF5.h4, REF5.h5, REF5.h6];
+results = add_result(results, 'Log-linear (Huang)', 7, p5ref, r5, ...
     @(lam,p) model5fun(lam,p(1),p(2),p(3),p(4),p(5),p(6),p(7)), n);
 
 rms5_fresh = 100*sqrt(sum(r5(p5).^2)/(n-7));
-fprintf('\nM5 fresh fit: RMS=%.2f%% (ref 0.57%%)', rms5_fresh);
+rms5_ref   = 100*sqrt(sum(r5(p5ref).^2)/(n-7));
+fprintf('\nM5 pinned REF5 (adopted): RMS=%.2f%%  |  fresh unpinned Stage-2 solve (diagnostic only): RMS=%.2f%%', ...
+        rms5_ref, rms5_fresh);
 if p5(4) >= ub5(4)-1e-6 || p5(4) <= lb5(4)+1e-6
     fprintf('  [h3 at bound -- known instability, see header]');
 end
 fprintf('\n');
 
-Jac = jacobian_fd(r5, p5);
-sigma2 = sum(r5(p5).^2) / (n - 7);
-try
-    cov5 = sigma2 * pinv(Jac'*Jac);
-    se5 = sqrt(diag(cov5));
-    fprintf('Std. errors (this run):  A %.0f  T %.1f  h2 %.4f  h3 %.2f  h4 %.4f  h5 %.4f  h6 %.4f\n', se5);
-catch
-    fprintf('Std. error computation skipped (near-singular Jacobian this run).\n');
-end
+% Item 17: standard errors for both vectors; the manuscript quotes REF5's.
+print_se(r5, p5,    n, 'fresh solve');
+print_se(r5, p5ref, n, 'pinned REF5');
 
 %% ========================================================================
 %  7. MODEL 6 — GAUSSIAN PROCESS REGRESSION
@@ -418,32 +467,9 @@ end
 % since it comes from fitrgp itself -- and jitter subsequent multi-start
 % attempts AROUND that baseline instead of around a hand-derived guess.
 gp_x = wl;  gp_y = L;
-rng(1);
-
-gpr_baseline = fitrgp(gp_x, gp_y, 'KernelFunction','matern52', 'Standardize', true, ...
-    'SigmaLowerBound', GPR_SIGMA_MIN, 'FitMethod','exact','PredictMethod','exact');
-ell_base  = gpr_baseline.KernelInformation.KernelParameters(1);
-sigF_base = gpr_baseline.KernelInformation.KernelParameters(2);
-sigN_base = gpr_baseline.Sigma;
-
-best_gp = gpr_baseline; best_ll = gpr_baseline.LogLikelihood;
-n_gpr_converged = 1;   % the baseline fit itself counts as the first attempt
-for k = 2:N_GPR_STARTS
-    ell0  = ell_base  * exp(0.3*randn);
-    sigF0 = sigF_base * exp(0.3*randn);
-    sigN0 = max(sigN_base * exp(0.3*randn), GPR_SIGMA_MIN);
-    try
-        gpr_k = fitrgp(gp_x, gp_y, 'KernelFunction','matern52', 'Standardize', true, ...
-            'SigmaLowerBound', GPR_SIGMA_MIN, 'FitMethod','exact','PredictMethod','exact', ...
-            'KernelParameters', [ell0; sigF0], 'Sigma', sigN0);
-        n_gpr_converged = n_gpr_converged + 1;
-        ll = gpr_k.LogLikelihood;
-        if ll > best_ll, best_ll = ll; best_gp = gpr_k; end
-    catch
-        continue
-    end
-end
-gprMdl = best_gp;
+% Item 13: the same multi-start routine is used for the full data and for
+% every LOOCV fold (see fit_gpr_multistart in LOCAL FUNCTIONS).
+[gprMdl, n_gpr_converged] = fit_gpr_multistart(gp_x, gp_y, N_GPR_STARTS, GPR_SIGMA_MIN);
 
 fprintf('\nM6 (GPR): LogLikelihood=%.2f, %d/%d starts succeeded\n', gprMdl.LogLikelihood, n_gpr_converged, N_GPR_STARTS);
 [Lpred, ~] = predict(gprMdl, wl);
@@ -459,9 +485,11 @@ fprintf('M6 effective colour temperature (post-hoc): %.0f K (ref 3069)\n', p6T(2
 %  8. METRICS TABLE, AIC/AICc/BIC, LOOCV
 %  ========================================================================
 fprintf('\n=== METRICS (in-sample) ===\n');
-fprintf('%-20s %3s %8s %10s %10s\n','model','k','RMS(%)','AIC','AICc');
+% Item 16: dAICc relative to Model 5 (the AICc-designated comparison).
+fprintf('%-20s %3s %8s %10s %10s %10s\n','model','k','RMS(%)','AIC','AICc','dAICc');
 for i = 1:numel(results)
-    fprintf('%-20s %3d %8.2f %10.2f %10.2f\n', results(i).name, results(i).k, results(i).rms, results(i).AIC, results(i).AICc);
+    fprintf('%-20s %3d %8.2f %10.2f %10.2f %10.2f\n', results(i).name, results(i).k, results(i).rms, ...
+            results(i).AIC, results(i).AICc, results(i).AICc - results(5).AICc);
 end
 % Changelog item 7: GPR's k=3 undercounts its EFFECTIVE degrees of freedom
 % once it is near-interpolating (see the "WHY LOOCV" note above) -- its
@@ -478,8 +506,13 @@ loocv(1) = loocv_simple(@(idx) fit_bb(wl_um(idx),F(idx),fitopts,planck), @(p,lam
 loocv(2) = loocv_simple(@(idx) fit_lin(wl_um(idx),F(idx),fitopts,planck), @(p,lam) p(1).*(1-p(3).*(lam/1000)).*planck(lam/1000,p(2)), wl,F,n);
 loocv(3) = loocv_simple(@(idx) fit_tab(wl_um(idx),F(idx),fitopts,planck,eps_table,T_MAX_TABLE), @(p,lam) p(1).*eps_table(lam/1000,p(2)).*planck(lam/1000,p(2)), wl,F,n);
 loocv(4) = loocv_simple(@(idx) fit_hyb(wl_um(idx),F(idx),fitopts,planck,eps_table,T_MAX_TABLE), @(p,lam) p(1).*eps_table(lam/1000,p(2)).*(1-p(3).*(lam/1000)).*planck(lam/1000,p(2)), wl,F,n);
-loocv(5) = loocv_model5(wl,F,p5,h4_1,h6_1,model5fun,fitopts,lb5,ub5);
-loocv(6) = loocv_gpr(gp_x,gp_y,wl,F,gprMdl,GPR_SIGMA_MIN);
+loocv(5) = loocv_model5_full(wl,F,p5ref,model5fun,fitopts,lb5,ub5);      % item 12
+loocv(6) = loocv_gpr_full(gp_x,gp_y,wl,F,N_GPR_STARTS,GPR_SIGMA_MIN);     % item 13
+% Legacy variants, printed for comparison only (NOT used for selection):
+loocv5_legacy = loocv_model5_legacy(wl,F,p5,h4_1,h6_1,model5fun,fitopts,lb5,ub5);
+loocv6_legacy = loocv_gpr_legacy(gp_x,gp_y,wl,F,gprMdl,GPR_SIGMA_MIN);
+fprintf(['Legacy LOOCV (not used): Model 5 with h4,h6 fixed at Stage-1 values %.2f%%; ' ...
+         'GPR with fixed hyperparameters %.2f%%\n'], loocv5_legacy, loocv6_legacy);
 
 for i = 1:6
     results(i).loocv = loocv(i);
@@ -497,7 +530,9 @@ end
 
 Tname = {results.name}';  Tk = [results.k]';  Trms = [results.rms]';
 TAIC = [results.AIC]';  TAICc = [results.AICc]';  Tloocv = [results.loocv]';
-Tout = table(Tname, Tk, Trms, TAIC, TAICc, Tloocv, 'VariableNames', {'model','k','RMS_pct','AIC','AICc','LOOCV_pct'});
+TdAICc = TAICc - TAICc(5);                                   % item 16
+Tout = table(Tname, Tk, Trms, TAIC, TAICc, TdAICc, Tloocv, 'VariableNames', ...
+             {'model','k','RMS_pct','AIC','AICc','dAICc_vs_M5','LOOCV_pct'});
 writetable(Tout, OUTPUT_TABLE);
 fprintf('Comparison table written: %s\n', OUTPUT_TABLE);
 
@@ -512,7 +547,7 @@ STYLE = struct( ...
                [0.00 0.60 0.50], [0.80 0.40 0.00], [0.00 0.45 0.70]}, ...
     'line',   {'-','--',':','-.','-','--'}, ...
     'marker', {'none','s','^','d','o','v'}, ...
-    'name',   {'1 Black body','2 Linear emissivity','3 Tabulated real', ...
+    'name',   {'1 Gray body','2 Linear emissivity','3 Tabulated real', ...
                '4 Hybrid','5 Log-linear (Huang)','6 GPR'});
 MARKER_SZ = 6;  LINE_W = 1.3;  LINE_W_WIN = 2.0;   % Model 5 drawn heavier: the adopted model
 
@@ -571,7 +606,7 @@ legend(ax2,'Location','best','Box','off','FontSize',8);
 % --- bottom-right: models 5-6 (the final two candidates) ---
 ax3 = subplot(2,2,4); hold(ax3,'on'); box(ax3,'on'); grid(ax3,'on');
 yline(ax3,0,'k-','HandleVisibility','off');
-plot(ax3, wl, 100*r5(p5), 'Color',STYLE(5).color, 'LineStyle',STYLE(5).line, ...
+plot(ax3, wl, 100*r5(p5ref), 'Color',STYLE(5).color, 'LineStyle',STYLE(5).line, ...
      'Marker',STYLE(5).marker, 'MarkerFaceColor',STYLE(5).color, 'MarkerSize',MARKER_SZ, ...
      'LineWidth',LINE_W_WIN, 'DisplayName',STYLE(5).name);
 plot(ax3, wl, 100*resid6, 'Color',STYLE(6).color, 'LineStyle',STYLE(6).line, ...
@@ -581,7 +616,7 @@ xlabel(ax3,'Wavelength (nm)'); ylabel(ax3,'Relative residual (%)');
 title(ax3,'Models 5 vs. 6: the final two candidates');
 legend(ax3,'Location','best','Box','off','FontSize',9);
 
-sgtitle(fig, 'Model 5 (log-linear, Huang et al. 1998) is adopted — see LOOCV, Section 8', ...
+sgtitle(fig, 'Model 5 (log-linear, Huang et al. 1998) is adopted by leave-one-out cross-validation', ...
         'FontSize',10, 'FontAngle','italic');
 
 % ---- export: color (raster + vector) ----
@@ -641,7 +676,7 @@ end
 
 function results = add_result_direct(results, name, k, resid, n)
     sse = sum(resid.^2);
-    rms = 100*sqrt(sse/n);
+    rms = 100*sqrt(sse/(n-k));   % item 15: same (n-k) normalisation as models 1-5
     AIC  = n*log(sse/n) + 2*k;
     AICc = AIC + 2*k*(k+1)/(n-k-1);
     % 'ffun' kept empty here (GPR has no closed-form curve function, see
@@ -720,7 +755,9 @@ function p = fit_hyb(wl_um,F,opts,planck,eps_table,T_max)
     p = lsqnonlin(r,[50000,3000,-0.1],[0,1000,-2],[1e7,T_max,2],opts);
 end
 
-function rmsq = loocv_model5(wl,F,p5,h4,h6,model5fun,opts,lb,ub)
+function rmsq = loocv_model5_legacy(wl,F,p5,h4,h6,model5fun,opts,lb,ub)
+% LEGACY (item 12): h4,h6 fixed -- at the Stage-1 values, as called from
+% Section 8. Kept only to document the change; not used for selection.
     n = numel(wl);  err = zeros(n,1);
     % idxset (changelog item 8): which of Model 5's 7 parameters
     % [A,T,h2,h3,h4,h5,h6] get refit in each LOOCV fold. [1 2 3 4 6] selects
@@ -742,7 +779,9 @@ function rmsq = loocv_model5(wl,F,p5,h4,h6,model5fun,opts,lb,ub)
     rmsq = 100*sqrt(mean(err.^2));
 end
 
-function rmsq = loocv_gpr(gp_x, gp_y, wl, F, gprMdl, sigmaMin)
+function rmsq = loocv_gpr_legacy(gp_x, gp_y, wl, F, gprMdl, sigmaMin)
+% LEGACY (item 13): hyperparameters fixed at their full-data values. Kept
+% only to document the change; not used for selection.
     n = numel(gp_x);  err = zeros(n,1);
     kp = gprMdl.KernelInformation.KernelParameters;
     sigma0 = gprMdl.Sigma;
@@ -777,4 +816,72 @@ function rmsq = loocv_gpr(gp_x, gp_y, wl, F, gprMdl, sigmaMin)
         fprintf('loocv_gpr: %d of %d folds used the fallback (free-hyperparameter) refit.\n', n_fallback, n);
     end
     rmsq = 100*sqrt(mean(err.^2));
+end
+
+function rmsq = loocv_model5_full(wl,F,p0,model5fun,opts,lb,ub)
+% Item 12: all seven parameters [A,T,h2,h3,h4,h5,h6] re-estimated in every
+% fold, starting from the pinned reference vector p0.
+    n = numel(wl);  err = zeros(n,1);
+    for i = 1:n
+        keep = true(n,1); keep(i) = false;
+        r = @(q) (model5fun(wl(keep),q(1),q(2),q(3),q(4),q(5),q(6),q(7)) - F(keep))./F(keep);
+        q = lsqnonlin(r, p0, lb, ub, opts);
+        pred = model5fun(wl(i),q(1),q(2),q(3),q(4),q(5),q(6),q(7));
+        err(i) = (pred - F(i))/F(i);
+    end
+    rmsq = 100*sqrt(mean(err.^2));
+end
+
+function [best_gp, n_conv] = fit_gpr_multistart(x, y, n_starts, sigma_min)
+% Item 13: one baseline fit with fitrgp's own initialisation, then
+% n_starts-1 jittered restarts around it (see the note in Section 7);
+% keeps the highest-likelihood model. Re-seeded on every call, so the
+% full-data fit and each LOOCV fold follow the same reproducible recipe.
+    rng(1);
+    base = fitrgp(x, y, 'KernelFunction','matern52', 'Standardize', true, ...
+        'SigmaLowerBound', sigma_min, 'FitMethod','exact','PredictMethod','exact');
+    ell_base  = base.KernelInformation.KernelParameters(1);
+    sigF_base = base.KernelInformation.KernelParameters(2);
+    sigN_base = base.Sigma;
+    best_gp = base;  best_ll = base.LogLikelihood;  n_conv = 1;
+    for k = 2:n_starts
+        ell0  = ell_base  * exp(0.3*randn);
+        sigF0 = sigF_base * exp(0.3*randn);
+        sigN0 = max(sigN_base * exp(0.3*randn), sigma_min);
+        try
+            g = fitrgp(x, y, 'KernelFunction','matern52', 'Standardize', true, ...
+                'SigmaLowerBound', sigma_min, 'FitMethod','exact','PredictMethod','exact', ...
+                'KernelParameters', [ell0; sigF0], 'Sigma', sigN0);
+            n_conv = n_conv + 1;
+            if g.LogLikelihood > best_ll, best_ll = g.LogLikelihood; best_gp = g; end
+        catch
+            continue
+        end
+    end
+end
+
+function rmsq = loocv_gpr_full(gp_x, gp_y, wl, F, n_starts, sigma_min)
+% Item 13: hyperparameters re-optimised in every fold.
+    n = numel(gp_x);  err = zeros(n,1);
+    for i = 1:n
+        keep = true(n,1); keep(i) = false;
+        m = fit_gpr_multistart(gp_x(keep), gp_y(keep), n_starts, sigma_min);
+        Lp = predict(m, wl(i));
+        err(i) = (exp(Lp)/wl(i)^5 - F(i))/F(i);
+    end
+    rmsq = 100*sqrt(mean(err.^2));
+end
+
+function print_se(rfun, p, n, label)
+% Item 17: standard errors from the centred finite-difference Jacobian,
+% absolute and relative to each parameter.
+    names = {'A','T','h2','h3','h4','h5','h6'};
+    J = jacobian_fd(rfun, p);
+    sigma2 = sum(rfun(p).^2) / (n - numel(p));
+    se = sqrt(diag(sigma2 * pinv(J'*J)))';
+    fprintf('Std. errors (%s): ', label);
+    for i = 1:numel(p)
+        fprintf('%s %.4g (%.0f%%)  ', names{i}, se(i), 100*se(i)/abs(p(i)));
+    end
+    fprintf('\n');
 end

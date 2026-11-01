@@ -1,4 +1,4 @@
-%% WAVELENGTH_CALIBRATION_Calibrated
+%% WAVELENGTH_CALIBRATION
 %  Wavelength-axis calibration of an Ocean Optics USB4000 spectrometer from
 %  Hg and Ne emission lines — fit, robust anchor, bandwidth-weighted least
 %  squares, and validation of the WRITTEN coefficients against a fresh,
@@ -527,7 +527,7 @@ h_hg  = plot(pixel(is_Hg), target(is_Hg), 'o','MarkerFaceColor',cHg,'MarkerEdgeC
 h_ne  = plot(pixel(~is_Hg),target(~is_Hg),'s','MarkerFaceColor',cNe,'MarkerEdgeColor','k','MarkerSize',6);
 xlabel('Pixel'); ylabel('Wavelength (nm)');
 title('Calibration curve \lambda(pixel)  (dotted = extrapolated beyond reference lines)');
-lg1 = legend([h_fit,h_fac,h_hg,h_ne], {'fit','fact','Hg','Ne'}, 'Location','southeast');
+lg1 = legend([h_fit,h_fac,h_hg,h_ne], {'fit','factory','Hg','Ne'}, 'Location','southeast');
 lg1.ItemTokenSize = [15, 18];
 lg1.Position(3) = lg1.Position(3) * 1.0;
 lg = findobj(gcf, 'Type', 'Legend');
@@ -630,7 +630,7 @@ elseif have_raw_val
         active_coefs = [active_coefs; a_act_ne];
         [pk, rj] = find_peaks(pv, cv, FRAC_THRESH, PROM_MIN, SEP_MIN, N_PARAB, SHIFT_MAX);
         pk = pk(~rj);
-        pixel_v = [pixel_v; pk(:)]; is_Hg_v = [is_Hg_v; false(numel(pk),1)]; %#ok<AGROW>
+        pixel_v = [pixel_v; pk(:)]; is_Hg_v = [is_Hg_v; false(numel(pk),1)];
     end
 
     if size(active_coefs,1) == 2
@@ -743,6 +743,80 @@ end
 fprintf(['\nREMINDER: Sections 1-10 compute a fit; whether that fit is the one ' ...
     'currently written\nto the instrument, coefficient by coefficient, is what ' ...
     'Section 11 checks (NOTE 14/15). Keep\nthe factory backup.\n']);
+
+%% ========================================================================
+%  12. CURATED PUBLICATION FIGURE (3 panels: curve, residuals, validation)
+%  ========================================================================
+% A separate, minimal figure for publication -- distinct from the 6/7-panel
+% diagnostic figure in Section 10, which remains unchanged for internal
+% development use. Follows the same Okabe & Ito (2008) palette and
+% color+true-grayscale export convention as ABSOLUTE_CALIBRATION.m's
+% Section 10, so every figure in the paper shares one visual language.
+if ~have_validation
+    fprintf('\nNo validation data available -- skipping the 3-panel publication figure (needs Section 11).\n');
+else
+    FIG_DPI         = 300;
+    OUTPUT_FIG_BASE = 'wavelength_validation';
+    % Same Hg/Ne colors already used throughout this script (Sections 10-11)
+    % -- blue/vermillion, already Okabe-Ito-compliant, kept for consistency
+    % rather than redefined.
+    cHg = [0.00 0.45 0.70];  cNe = [0.85 0.33 0.10];
+
+    % Layout changed from three equal-width panels in one row to a
+    % top/bottom-pair layout matching Figure 2: (a) the calibration curve
+    % takes the full top row, larger than either panel below it, since it
+    % is the primary result; (b) and (c) sit side by side underneath as
+    % its supporting diagnostics. The figure's aspect ratio is switched
+    % from wide-and-short to taller, and each axis is placed with an
+    % explicit normalized position ([x0 y0 width height]) rather than a
+    % uniform subplot grid, so panel (a)'s extra prominence is deliberate,
+    % not a side effect of the grid.
+    figp = figure('Units','normalized','OuterPosition',[0.12 0.04 0.55 0.90], 'Color','w');
+    set(figp, 'DefaultAxesFontSize',11, 'DefaultTextFontSize',11);
+
+    % --- (a) calibration curve: full width, top row ---
+    axA = subplot('Position', [0.09 0.58 0.87 0.37]); hold(axA,'on'); box(axA,'on'); grid(axA,'on');
+    hfit = plot(axA, pp_data, polyval(fliplr(a),pp_data), 'k-', 'LineWidth',1.4);
+    plot(axA, pp_lo, polyval(fliplr(a),pp_lo), 'k:', 'LineWidth',1.0, 'HandleVisibility','off');
+    plot(axA, pp_hi, polyval(fliplr(a),pp_hi), 'k:', 'LineWidth',1.0, 'HandleVisibility','off');
+    hfac = plot(axA, pp_full, polyval(fliplr(FACTORY_COEF),pp_full), '--', 'Color',[0.6 0.6 0.6], 'LineWidth',1.4);
+    hhg  = plot(axA, pixel(is_Hg),  target(is_Hg),  'o', 'MarkerFaceColor',cHg, 'MarkerEdgeColor','k', 'MarkerSize',6);
+    hne  = plot(axA, pixel(~is_Hg), target(~is_Hg), 's', 'MarkerFaceColor',cNe, 'MarkerEdgeColor','k', 'MarkerSize',6);
+    xlabel(axA,'Pixel'); ylabel(axA,'Wavelength (nm)');
+    title(axA,'(a) Calibration curve');
+    legend(axA, [hfit,hfac,hhg,hne], {'adopted fit','factory','Hg','Ne'}, ...
+        'Location','southeast', 'Box','off', 'FontSize',9);
+
+    % --- (b) fit residuals: bottom row, left half ---
+    axB = subplot('Position', [0.09 0.09 0.395 0.37]); hold(axB,'on'); box(axB,'on'); grid(axB,'on');
+    yline(axB,0,'k-','HandleVisibility','off');
+    sz = 20 + 120*weight/max(weight);   % marker size proportional to bandwidth weight
+    scatter(axB, pixel(is_Hg),  residual(is_Hg),  sz(is_Hg),  cHg, 'filled', 'MarkerEdgeColor','k');
+    scatter(axB, pixel(~is_Hg), residual(~is_Hg), sz(~is_Hg), cNe, 'filled', 'MarkerEdgeColor','k');
+    yline(axB, rms_wt, ':k'); yline(axB, -rms_wt, ':k');
+    xlabel(axB,'Pixel'); ylabel(axB,'Residual (nm)');
+    title(axB, sprintf('(b) Fit residuals (weighted RMS = %.4f nm)', rms_wt));
+
+    % --- (c) post-write validation: bottom row, right half ---
+    axC = subplot('Position', [0.565 0.09 0.395 0.37]); hold(axC,'on'); box(axC,'on'); grid(axC,'on');
+    yline(axC,0,'k-','HandleVisibility','off');
+    h1 = plot(axC, pixel_v(is_Hg_v),  res_v(is_Hg_v),  'o', 'Color',cHg, 'MarkerFaceColor',cHg, 'MarkerSize',6);
+    h2 = plot(axC, pixel_v(~is_Hg_v), res_v(~is_Hg_v), 's', 'Color',cNe, 'MarkerFaceColor',cNe, 'MarkerSize',6);
+    xlabel(axC,'Pixel'); ylabel(axC,'Residual (nm)');
+    title(axC, sprintf('(c) Post-write validation (RMS = %.4f nm, n=%d)', rms(res_v), numel(res_v)));
+    legend(axC, [h1,h2], {'Hg','Ne'}, 'Location','best', 'Box','off', 'FontSize',9);
+
+    % ---- export: color (raster + vector) ----
+    exportgraphics(figp, [OUTPUT_FIG_BASE '_color.png'], 'Resolution',FIG_DPI);
+    exportgraphics(figp, [OUTPUT_FIG_BASE '_color.pdf'], 'ContentType','vector');
+    fprintf('\nPublication figure (color) written: %s_color.png / .pdf\n', OUTPUT_FIG_BASE);
+
+    % ---- export: true grayscale (same method as ABSOLUTE_CALIBRATION.m) ----
+    imgp  = print(figp, '-RGBImage', ['-r' num2str(FIG_DPI)]);
+    grayp = uint8(0.299*double(imgp(:,:,1)) + 0.587*double(imgp(:,:,2)) + 0.114*double(imgp(:,:,3)));
+    imwrite(grayp, [OUTPUT_FIG_BASE '_bw.png']);
+    fprintf('Publication figure (grayscale) written: %s_bw.png\n', OUTPUT_FIG_BASE);
+end
 
 %% ========================================================================
 %  LOCAL FUNCTIONS
