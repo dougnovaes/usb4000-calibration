@@ -568,7 +568,9 @@ curve6  = exp(Lp)./lam_plot.^5;
 band_hi = exp(Lp+1.96*Lsdp)./lam_plot.^5;
 band_lo = exp(Lp-1.96*Lsdp)./lam_plot.^5;
 
-fig = figure('Units','normalized','OuterPosition',[0.03 0.05 0.9 0.85], 'Color','w');
+% Fixed physical size (920 x 900 px at 96 ppi), so the exported aspect
+% ratio is the article's and does not depend on the screen.
+fig = figure('Units','centimeters','Position',[1 0 24.34 23.81], 'Color','w');
 set(fig, 'DefaultAxesFontSize',11, 'DefaultTextFontSize',11);
 
 % --- top: all six curves + certificate, full width ---
