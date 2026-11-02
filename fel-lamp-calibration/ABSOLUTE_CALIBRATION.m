@@ -568,9 +568,9 @@ curve6  = exp(Lp)./lam_plot.^5;
 band_hi = exp(Lp+1.96*Lsdp)./lam_plot.^5;
 band_lo = exp(Lp-1.96*Lsdp)./lam_plot.^5;
 
-% Fixed physical size (920 x 900 px at 96 ppi), so the exported aspect
+% Fixed physical size (844 x 824 px at 96 ppi), so the exported aspect
 % ratio is the article's and does not depend on the screen.
-fig = figure('Units','centimeters','Position',[1 0 24.34 23.81], 'Color','w');
+fig = figure('Units','centimeters','Position',[1 0 22.34 21.81], 'Color','w');
 set(fig, 'DefaultAxesFontSize',11, 'DefaultTextFontSize',11);
 
 % --- top: all six curves + certificate, full width ---
@@ -615,7 +615,7 @@ plot(ax3, wl, 100*resid6, 'Color',STYLE(6).color, 'LineStyle',STYLE(6).line, ...
      'Marker',STYLE(6).marker, 'MarkerFaceColor','none', 'MarkerSize',MARKER_SZ, ...
      'LineWidth',LINE_W, 'DisplayName',STYLE(6).name);
 xlabel(ax3,'Wavelength (nm)'); ylabel(ax3,'Relative residual (%)');
-title(ax3,'Models 5 vs. 6: the final two candidates');
+title(ax3,'Models 5 vs. 6: final candidates');
 legend(ax3,'Location','best','Box','off','FontSize',9);
 
 sgtitle(fig, 'Model 5 (log-linear, Huang et al. 1998) is adopted by leave-one-out cross-validation', ...
