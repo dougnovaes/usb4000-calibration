@@ -1,0 +1,14 @@
+# Wavelength calibration - Ocean Optics USB4000
+# Generated 2026-11-01 23:46
+#
+[WEIGHTED] n=31 RMS=0.0339 nm (unweighted 0.0476 nm) range=253.7-743.9 nm
+Intercept	176.3556717870
+1st	2.1606649029E-01
+2nd	-3.6985346133E-06
+3rd	-5.5381923008E-10
+
+[FACTORY_BACKUP] RMS=1.0469 nm (unweighted 1.0419 nm)
+Intercept	178.085770
+1st	2.1517764E-01
+2nd	-3.3423826E-06
+3rd	-5.9958050E-10
