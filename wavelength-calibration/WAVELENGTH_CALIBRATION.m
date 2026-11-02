@@ -107,13 +107,17 @@
 %  ------------------------------------------------------------------------
 %  REFERENCE RESULT (for verification)
 %  ------------------------------------------------------------------------
-%    Bandwidth-weighted fit, robust Hg anchor, 32 lines (254-744 nm):
+%    Bandwidth-weighted fit, robust Hg anchor, 31 lines (8 Hg + 23 Ne, 254-744 nm):
 %        a0 =  1.7635567179E+02
 %        a1 =  2.1606649029E-01
 %        a2 = -3.6985346136E-06
 %        a3 = -5.5381923002E-10
+%        (coefficients written to the instrument, run of 2026-09-01; MATLAB
+%        R2025b reproduces them to ~1e-10 relative, a2 = -3.6985346133E-06,
+%        a3 = -5.5381923008E-10 -- floating-point noise, ~1e-10 nm in lambda)
 %        weighted RMS ................ 0.0339 nm
-%        factory calibration .......... 1.0419 nm   (~31x improvement)
+%        factory, same lines and weights  1.0469 nm   (~31x improvement)
+%        unweighted: fit 0.0476 nm, factory 1.0419 nm (~22x)
 %        Ne pattern hit rate .......... 25 of 27 peaks (93%)
 %        anchor: 253.6521 nm excluded (leverage 0.94); anchor offset
 %                scatter 0.183 -> 0.066 nm
@@ -423,7 +427,10 @@ if sum(clean) >= DEGREE+2
 else
     a_cl = nan(1,DEGREE+1); rms_cl = NaN;
 end
-rms_fac = rms(polyval(fliplr(FACTORY_COEF), pixel) - target);
+r_fac       = polyval(fliplr(FACTORY_COEF), pixel) - target;
+rms_fac     = sqrt(sum(weight(:).*r_fac(:).^2)/sum(weight(:)));  % weighted, same definition as fit_poly
+rms_fac_unw = rms(r_fac);                                         % unweighted
+rms_wt_unw  = rms(r_wt);                                          % adopted (weighted) fit, unweighted RMS
 
 fprintf('\n=== COMPARISON OF FITTING SCHEMES ===\n');
 fprintf('%-28s %4s %11s %12s\n','scheme','n','RMS (nm)','range (nm)');
@@ -433,7 +440,9 @@ if sum(clean) >= DEGREE+2
     fprintf('%-28s %4d %11.4f %5.0f-%.0f\n','clean lines only', sum(clean), rms_cl, min(target(clean)), max(target(clean)));
     fprintf('\nWeighted fit evaluated on clean lines only: %.4f nm\n', rms(r_wt(clean)));
 end
-fprintf('%-28s %4d %11.4f\n','factory calibration', n, rms_fac);
+fprintf('%-28s %4d %11.4f\n','weighted fit, unweighted RMS', n, rms_wt_unw);
+fprintf('%-28s %4d %11.4f\n','factory, weighted RMS', n, rms_fac);
+fprintf('%-28s %4d %11.4f\n','factory, unweighted RMS', n, rms_fac_unw);
 
 a = a_wt;  residual = r_wt;    % ADOPTED coefficients -- used throughout Section 11
 fprintf('\n=== ADOPTED COEFFICIENTS (weighted) ===\n');
@@ -489,9 +498,9 @@ writetable(T,'calibration_residuals.csv');
 
 fid = fopen('calibration_coefficients.txt','w');
 fprintf(fid,'# Wavelength calibration - Ocean Optics USB4000\n# Generated %s\n#\n', datestr(now,'yyyy-mm-dd HH:MM'));
-fprintf(fid,'[WEIGHTED]    n=%d  RMS=%.4f nm  range=%.1f-%.1f nm\n', n, rms_wt, min(target), max(target));
+fprintf(fid,'[WEIGHTED] n=%d RMS=%.4f nm (unweighted %.4f nm) range=%.1f-%.1f nm\n', n, rms_wt, rms_wt_unw, min(target), max(target));
 fprintf(fid,'Intercept\t%.10f\n1st\t%.10E\n2nd\t%.10E\n3rd\t%.10E\n\n', a_wt);
-fprintf(fid,'[FACTORY_BACKUP]  RMS=%.4f nm\n', rms_fac);
+fprintf(fid,'[FACTORY_BACKUP] RMS=%.4f nm (unweighted %.4f nm)\n', rms_fac, rms_fac_unw);
 fprintf(fid,'Intercept\t%.6f\n1st\t%.7E\n2nd\t%.7E\n3rd\t%.7E\n', FACTORY_COEF);
 fclose(fid);
 fprintf('\nFit results written: calibration_residuals.csv, calibration_coefficients.txt\n');
@@ -527,11 +536,9 @@ h_hg  = plot(pixel(is_Hg), target(is_Hg), 'o','MarkerFaceColor',cHg,'MarkerEdgeC
 h_ne  = plot(pixel(~is_Hg),target(~is_Hg),'s','MarkerFaceColor',cNe,'MarkerEdgeColor','k','MarkerSize',6);
 xlabel('Pixel'); ylabel('Wavelength (nm)');
 title('Calibration curve \lambda(pixel)  (dotted = extrapolated beyond reference lines)');
-lg1 = legend([h_fit,h_fac,h_hg,h_ne], {'fit','factory','Hg','Ne'}, 'Location','southeast');
+lg1 = legend([h_fit,h_fac,h_hg,h_ne], {'fit','\factory','Hg','Ne'}, 'Location','southeast');
 lg1.ItemTokenSize = [15, 18];
 lg1.Position(3) = lg1.Position(3) * 1.0;
-lg = findobj(gcf, 'Type', 'Legend');
-disp(lg(end).String)
 
 subplot(n_rows,3,2); hold on; grid on; box on;
 yline(0,'k-');
@@ -570,7 +577,7 @@ xlabel('Pixel'); ylabel('d\lambda/dpixel (nm/pixel)');
 title('Dispersion (derivative of the polynomial; dotted = extrapolated)');
 
 % lg = findobj(gcf, 'Type', 'Legend');
-% lg(end).String   % a legenda do subplot 1 deve imprimir {'fit','factory','Hg','Ne'}
+% lg(end).String   % a legenda do subplot 1 deve imprimir {'fit','\factory','Hg','Ne'}
 
 %% ========================================================================
 %  11. VALIDATION AGAINST A POST-WRITE ACQUISITION
@@ -784,7 +791,7 @@ else
     hne  = plot(axA, pixel(~is_Hg), target(~is_Hg), 's', 'MarkerFaceColor',cNe, 'MarkerEdgeColor','k', 'MarkerSize',6);
     xlabel(axA,'Pixel'); ylabel(axA,'Wavelength (nm)');
     title(axA,'(a) Calibration curve');
-    legend(axA, [hfit,hfac,hhg,hne], {'adopted fit','factory','Hg','Ne'}, ...
+    legend(axA, [hfit,hfac,hhg,hne], {'adopted fit','\factory','Hg','Ne'}, ...
         'Location','southeast', 'Box','off', 'FontSize',9);
 
     % --- (b) fit residuals: bottom row, left half ---

@@ -94,6 +94,8 @@ excluded, and the region below 300 nm is shaded in the figure.
 | `certificate_comparison_all_distances.csv` | Ratio of measured to certificate irradiance at the certificate wavelengths, per distance, with the expected (50/d)^2 (`ABSOLUTE_IRRADIANCE_VALIDATION`) |
 | `distance_validation_color.png` / `.pdf`, `distance_validation_bw.png` | Measured-to-certificate ratio vs. wavelength at the three distances (`ABSOLUTE_IRRADIANCE_VALIDATION`) |
 
+The outputs in this release were generated with MATLAB R2025b.
+
 ## Distance and the calibration
 
 A SpectraSuite absolute-irradiance calibration converts detector counts
@@ -110,7 +112,7 @@ with those of the 50 cm file to within 1-5% in 50 nm bands (median 4%),
 against the factor 1.44 expected if the scaling were missing. Measuring
 the lamp at d with such a calibration therefore returns the certificate times
 (50/d)^2: the ratio `ABSOLUTE_IRRADIANCE_VALIDATION.m` reports at 57 and
-60 cm (0.770 and 0.698, against 0.769 and 0.694 predicted) is the
+60 cm (0.770 and 0.699, against 0.769 and 0.694 predicted) is the
 expected inverse-square attenuation, not a software fault. Do not
 rescale measurements of other sources by (d/50)^2.
 
