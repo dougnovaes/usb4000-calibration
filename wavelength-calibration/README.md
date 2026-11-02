@@ -53,7 +53,9 @@ motivated each step are documented as numbered notes in
 | Stage | Inputs | Outputs |
 |-------|--------|---------|
 | Fit | `hg_spectrum.txt`, `ne_spectrum.txt`, `hg_bandwidths.txt`, `ne_bandwidths.txt` | `calibration_coefficients.txt`, `calibration_residuals.csv` |
-| Validation (post-write) | `validation_hg_spectrum.txt`, `validation_ne_spectrum.txt` | `validation_residuals.csv` |
+| Validation (post-write) | `validation_hg_spectrum.txt`, `validation_ne_spectrum.txt` | `validation_residuals.csv`, `wavelength_validation_color.png` / `.pdf`, `wavelength_validation_bw.png` (publication figure) |
+
+The outputs in this release were generated with MATLAB R2025b.
 
 `hg_spectrum.txt`/`ne_spectrum.txt` are two-column SpectraSuite exports
 (wavelength under the factory calibration, counts), acquired under the
@@ -69,15 +71,22 @@ the current script; see that folder for what each file was for.
 
 ## Reference result
 
-Bandwidth-weighted fit, robust Hg anchor, 32 lines (254-744 nm):
+Bandwidth-weighted fit, robust Hg anchor, 31 lines (8 Hg + 23 Ne, 254-744 nm):
 
 ```
 a0 =  1.7635567179E+02
 a1 =  2.1606649029E-01
 a2 = -3.6985346136E-06
 a3 = -5.5381923002E-10
-weighted RMS = 0.0339 nm   (factory calibration: 1.0419 nm, ~31x worse)
+weighted RMS   = 0.0339 nm   (factory calibration, same lines and weights: 1.0469 nm, ~31x worse)
+unweighted RMS = 0.0476 nm   (factory calibration: 1.0419 nm, ~22x worse)
 ```
+
+These are the coefficients written to the instrument (run of 2026-09-01).
+Re-running the script with MATLAB R2025b reproduces them to a relative
+difference of about 1e-10 (a2 = -3.6985346133E-06, a3 = -5.5381923008E-10),
+a platform-dependent floating-point effect that changes the wavelength by
+about 1e-10 nm across the detector.
 
 ## Requirements
 
