@@ -13,10 +13,13 @@
 %       with zeros and then silently truncated the sorted table to 3648
 %       rows, dropping real pixels at the top of the range. In addition,
 %       example_HighSpeed100x_50cm.txt as published in release v1.2.1
-%       carried 11 rows (repaired in v1.2.2)
-%       split across two lines: a CR+LF was inserted at every 262144-byte
-%       boundary of the file, a file-transfer/synchronisation artefact, not
-%       instrument behaviour. The old parser read each fragment as a row of
+%       carried 11 rows split across two lines: a CR+LF was inserted at
+%       every 262144-byte boundary of the file by a file-copy artefact
+%       introduced in commit 06d3dbf, not by the instrument. The same
+%       artefact removed the leading tab of the header line and the final
+%       line break. The original acquisition file is intact; since v1.2.3
+%       the published file is that original, byte for byte.
+%       The old parser read each fragment as a row of
 %       its own (one of them as a fake pixel at 516.39 nm). The new parser
 %       reads the header explicitly, rejoins split rows -- reporting each
 %       one -- and stops on any row whose field count is still wrong.

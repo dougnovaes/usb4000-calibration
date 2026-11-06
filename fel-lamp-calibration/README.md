@@ -107,8 +107,8 @@ fields or by pre-scaling the lamp file (both give the same result); the
 coefficients written to the .IrradCal file then do not depend on d.
 
 The example calibrations confirm this. Between 400 and 800 nm, outside
-the band saturated at 50 cm, the coefficients of the 60 cm file agree
-with those of the 50 cm file to within 1-5% in 50 nm bands (median 4%),
+the band saturated at 50 cm, the coefficients of the 60 cm file exceed
+those of the 50 cm file by 3-5% in 50 nm bands (median 4.2%),
 against the factor 1.44 expected if the scaling were missing. Measuring
 the lamp at d with such a calibration therefore returns the certificate times
 (50/d)^2: the ratio `ABSOLUTE_IRRADIANCE_VALIDATION.m` reports at 57 and
@@ -116,7 +116,7 @@ the lamp at d with such a calibration therefore returns the certificate times
 expected inverse-square attenuation, not a software fault. Do not
 rescale measurements of other sources by (d/50)^2.
 
-The 4% difference between the two independently built calibrations is
+The 4.2% difference between the two independently built calibrations is
 the reproducibility of the setup (alignment and distance). It is the
 dominant term of the irradiance-scale uncertainty, about 3% at 1 sigma.
 
